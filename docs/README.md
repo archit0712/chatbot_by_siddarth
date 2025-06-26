@@ -10,7 +10,7 @@ An intelligent enterprise chatbot that provides secure, role-based access to com
 - **AI-Powered Responses**: GPT-3.5 integration with context-aware answer generation
 - **Source Citations**: All responses include references to source documents
 - **Audit Logging**: Comprehensive tracking of sensitive queries for compliance
-- **Real-time Chat**: Persistent conversation history with Firebase backend
+- **Real-time Chat**: Persistent conversation history
 - **Admin Dashboard**: User and document management interface
 
 ##  Architecture
@@ -26,7 +26,6 @@ An intelligent enterprise chatbot that provides secure, role-based access to com
 
 - Python 3.9 or higher
 - OpenAI API key
-- Firebase project with Authentication, Firestore, and Storage enabled
 - Git
 
 ##  Installation
@@ -65,27 +64,8 @@ Create a `.env` file in the `config/` directory:
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Firebase Web App Configuration
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-FIREBASE_APP_ID=your_app_id
-FIREBASE_MEASUREMENT_ID=your_measurement_id
-FIREBASE_DATABASE_URL=your_database_url
-
-# Firebase Admin SDK Configuration
-FIREBASE_TYPE=service_account
-FIREBASE_PRIVATE_KEY_ID=your_private_key_id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_here\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=your_service_account@your_project.iam.gserviceaccount.com
-FIREBASE_CLIENT_ID=your_client_id
-FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
-FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
-FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
-FIREBASE_CLIENT_X509_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/your_service_account%40your_project.iam.gserviceaccount.com
-FIREBASE_UNIVERSE_DOMAIN=googleapis.com
+# PostgreSQL Configuration
+DATABASE_URL=postgresql://user:password@localhost/chatbot_db
 
 # Vector Database Configuration
 VECTOR_DB_PATH=./vector_db
@@ -99,47 +79,7 @@ USE_UNIFIED_ANALYZER=true
 
 **Note**: Copy the `env.example` file to `config/.env` and fill in your actual values.
 
-### 5. Firebase Setup
-
-1. **Create Firebase Project**:
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a new project
-   - Enable Authentication, Firestore Database, and Storage
-
-2. **Generate Service Account Key**:
-   - Go to Project Settings > Service Accounts
-   - Generate new private key (JSON format)
-   - Use the values to fill your `.env` file
-
-3. **Configure Authentication**:
-   - Enable Email/Password authentication
-   - Add authorized domains if deploying
-
-4. **Set up Firestore Security Rules**:
-   ```javascript
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /{document=**} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-   ```
-
-5. **Configure Storage Rules**:
-   ```javascript
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /{allPaths=**} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-   ```
-
-### 6. Initialize Vector Database
+### 5. Initialize Vector Database
 
 ```bash
 # Create necessary directories
@@ -186,10 +126,9 @@ streamlit run app.py --server.port 8080 --server.address 0.0.0.0
 
 1. Start the application
 2. Click "Sign Up" and create your first user account
-3. Manually update the user's role in Firebase Firestore:
-   - Go to Firestore Database
-   - Find your user in the `users` collection
-   - Change the `role` field to `"Admin"`
+3. Manually update the user's role in the PostgreSQL database:
+   - Open your PostgreSQL client
+   - Update the user's `role` column to `Admin`
 
 ### 2. Upload Test Documents
 
@@ -283,17 +222,16 @@ python -c "from core.postgres_auth import PostgresAuthManager; auth = PostgresAu
    - Verify your OpenAI API key in `.env`
    - Check API quota and billing status
 
-2. **"Firebase Authentication Failed"**:
-   - Verify all Firebase environment variables
-   - Check service account permissions
-   - Ensure Firebase project is properly configured
+2. **"Database Connection Failed"**:
+   - Verify your `DATABASE_URL` in `.env`
+   - Ensure PostgreSQL is running and accessible
 
 3. **"Vector Database Error"**:
    - Ensure `vector_db` directory exists and is writable
    - Check OpenAI embeddings API access
 
 4. **"Document Upload Failed"**:
-   - Verify Firebase Storage rules
+   - Verify file system permissions for the `documents` directory
    - Check file size limits (200MB default)
    - Ensure proper authentication
 
@@ -315,7 +253,7 @@ export STREAMLIT_LOGGER_LEVEL=debug
 
 ### Audit Logs
 
-Monitor sensitive queries in Firebase Firestore under the `sensitive_query_logs` collection.
+Monitor sensitive queries in the `sensitive_query_logs` table of PostgreSQL.
 
 ### Performance Metrics
 
@@ -328,8 +266,8 @@ Monitor sensitive queries in Firebase Firestore under the `sensitive_query_logs`
 ### Production Security
 
 1. **Environment Variables**: Never commit `.env` files to version control
-2. **API Keys**: Rotate OpenAI and Firebase keys regularly
-3. **Database Rules**: Implement strict Firestore security rules
+2. **API Keys**: Rotate OpenAI keys regularly
+3. **Database Rules**: Restrict database access with proper roles
 4. **HTTPS**: Always use HTTPS in production
 5. **Access Logs**: Monitor and audit all system access
 

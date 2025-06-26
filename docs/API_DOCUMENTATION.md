@@ -143,7 +143,7 @@ def upload_document(
     tags: List[str] = None
 ) -> Dict[str, Any]
 ```
-- **Description**: Uploads document to Firebase Storage and saves metadata
+- **Description**: Saves document to local storage and records metadata in PostgreSQL
 - **Parameters**:
   - `file`: Binary file object
   - `filename`: Original filename
@@ -158,7 +158,6 @@ def upload_document(
   {
       "success": bool,
       "document_id": str,
-      "download_url": str,
       "error": str  # if success is False
   }
   ```
@@ -383,7 +382,7 @@ def save_message(
     metadata: Dict[str, Any] = None
 ) -> bool
 ```
-- **Description**: Saves chat message to Firebase Firestore
+- **Description**: Saves chat message to PostgreSQL
 - **Parameters**:
   - `user_email`: User's email
   - `session_id`: Chat session identifier
@@ -433,7 +432,7 @@ def display_admin_interface(auth_manager: PostgresAuthManager) -> None
 ```
 - **Description**: Renders admin dashboard for user management
 - **Parameters**:
-  - `auth_manager`: Firebase authentication manager
+  - `auth_manager`: PostgreSQL authentication manager
 - **Functions**:
   - View all users
   - Update user roles
@@ -594,10 +593,8 @@ Required environment variables for API functionality:
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key
 
-# Firebase Configuration
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_PRIVATE_KEY=your_private_key
-FIREBASE_CLIENT_EMAIL=your_service_account_email
+# PostgreSQL Configuration
+DATABASE_URL=postgresql://user:password@localhost/chatbot_db
 
 # Application Configuration
 DOCUMENT_STORAGE=./documents
@@ -607,7 +604,7 @@ VECTOR_DB_PATH=./vector_db
 ### Rate Limiting
 
 - **OpenAI API**: Respects OpenAI rate limits
-- **Firebase**: Uses Firebase quotas
+- **Database**: Subject to PostgreSQL server resources
 - **File Upload**: 200MB max file size
 - **Queries**: No artificial rate limiting (controlled by underlying services)
 

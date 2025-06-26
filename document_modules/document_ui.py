@@ -2,7 +2,7 @@ import streamlit as st
 from typing import Dict, Any, Optional, List
 import tempfile
 import os
-from firebase_admin import firestore
+import base64
 
 from document_modules.document_manager import DocumentManager, DocumentType
 from core.postgres_auth import PostgresAuthManager, UserRole
@@ -121,7 +121,7 @@ def display_document_upload(auth_manager: PostgresAuthManager, doc_manager: Docu
                                 # Process the newly uploaded document
                                 document_id = result.get("document_id")
                                 if document_id:
-                                    process_result = doc_processor.process_firebase_document(
+                                    process_result = doc_processor.process_document(
                                         document_id=document_id,
                                         user_role=UserRole(user_role)
                                     )
@@ -245,13 +245,24 @@ def display_document_list(auth_manager: PostgresAuthManager, doc_manager: Docume
                     
                     if doc_content.get('success'):
                         document = doc_content.get("document", {})
-                        download_url = document.get("download_url")
-                        
-                        if download_url:
-                            st.markdown(f"[Download Document]({download_url})")
-                            st.markdown(f"<iframe src='{download_url}' width='100%' height='500px'></iframe>", unsafe_allow_html=True)
+                        file_path = document.get("file_path")
+
+                        if file_path and os.path.exists(file_path):
+                            with open(file_path, "rb") as pdf_file:
+                                data = pdf_file.read()
+                                b64 = base64.b64encode(data).decode()
+                            st.download_button(
+                                label="Download Document",
+                                data=data,
+                                file_name=os.path.basename(file_path),
+                                mime="application/pdf",
+                            )
+                            st.markdown(
+                                f"<iframe src='data:application/pdf;base64,{b64}' width='100%' height='500px'></iframe>",
+                                unsafe_allow_html=True,
+                            )
                         else:
-                            st.error("Document URL not available.")
+                            st.error("Document file not available.")
                     else:
                         st.error(doc_content.get("error", "Failed to retrieve document."))
             
@@ -343,8 +354,8 @@ def display_admin_document_management(auth_manager: PostgresAuthManager, doc_man
         else:
             st.error(result.get("error", "Error deleting document"))
     
-    # Get all documents from Firestore (admin sees all)
-    docs = doc_manager.db.collection('documents').order_by("upload_timestamp", direction=firestore.Query.DESCENDING).stream()
+    # Get all documents from PostgreSQL (admin sees all)
+    docs = doc_manager.get_all_documents()
     
     st.subheader("All Documents")
     
@@ -354,9 +365,7 @@ def display_admin_document_management(auth_manager: PostgresAuthManager, doc_man
     
     # Display documents with search filtering
     doc_count = 0
-    for doc in docs:
-        doc_data = doc.to_dict()
-        doc_data['id'] = doc.id
+    for doc_data in docs:
         
         # Apply search filter if search term provided
         if search_lower and search_lower not in doc_data.get('title', '').lower() and search_lower not in doc_data.get('description', '').lower():
