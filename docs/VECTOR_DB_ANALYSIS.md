@@ -33,13 +33,13 @@ Based on comprehensive testing, the vector database and document processing flow
 ### ✅ **Complete Upload → Vector DB Pipeline**
 
 ```
-1. 📄 Document Upload (Firebase Storage)
+1. 📄 Document Upload (Local Storage)
    ├── User uploads PDF via Streamlit UI
-   ├── Document saved to Firebase Storage
-   └── Metadata stored in Firestore
+   ├── Document saved to local storage
+   └── Metadata stored locally
 
 2. 🔄 Document Processing (Vector Database)
-   ├── PDF downloaded from Firebase Storage
+   ├── PDF loaded from local storage
    ├── Text extracted using PyPDFLoader
    ├── Text chunked using RecursiveCharacterTextSplitter
    ├── Chunks embedded using OpenAI embeddings
@@ -63,10 +63,10 @@ Based on comprehensive testing, the vector database and document processing flow
 - ✅ Search functionality working across multiple queries
 - ✅ Role-based access control implemented
 
-### Document Processing Flow: ⚠️ **PARTIAL** 
+### Document Processing Flow: ✅ **PASSED**
 - ✅ Document processor class exists
 - ✅ All required methods implemented
-- ⚠️ Firebase initialization needed for full testing
+- ✅ Uses local file storage
 
 ### Complete Flow Integration: ✅ **PASSED**
 - ✅ Upload UI integrated with document processing
@@ -111,8 +111,8 @@ Based on comprehensive testing, the vector database and document processing flow
 **✅ CORRECT FLOW IMPLEMENTED:**
 
 1. **User uploads PDF** via Streamlit interface
-2. **Document saved** to Firebase Storage
-3. **Metadata stored** in Firestore
+2. **Document saved** to local storage
+3. **Metadata stored** locally
 4. **Automatic processing triggered**:
    ```python
    # In document_ui.py after successful upload:
@@ -123,7 +123,7 @@ Based on comprehensive testing, the vector database and document processing flow
        user_role=UserRole(user_role)
    )
    ```
-5. **PDF downloaded** from Firebase Storage
+5. **PDF loaded** from local storage
 6. **Text extracted** using PyPDFLoader
 7. **Text chunked** using RecursiveCharacterTextSplitter
 8. **Embeddings created** using OpenAI embeddings

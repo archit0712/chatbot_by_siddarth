@@ -19,10 +19,7 @@ from typing import Dict, Any
 
 from document_modules.document_processor import DocumentProcessor
 from core.database import VectorDatabase
-from core.firebase_auth import FirebaseAuthManager, UserRole
-from core.admin import display_admin_interface
-from document_modules.document_manager import DocumentManager
-from document_modules.document_ui import display_document_upload, display_document_list, display_admin_document_management
+from core.auth import AuthenticationManager, UserRole
 from utils.financial_filter import FinancialContentFilter, FilterAction
 from utils.audit_logger import AuditLogger
 from ui.chat_history_manager import ChatHistoryManager
@@ -38,8 +35,7 @@ VECTOR_DB_PATH = os.environ.get("VECTOR_DB_PATH", "./vector_db")
 # Initialize components
 document_processor = DocumentProcessor(document_dir=DOCUMENT_STORAGE)
 vector_db = VectorDatabase(db_path=VECTOR_DB_PATH)
-auth_manager = FirebaseAuthManager()
-doc_manager = DocumentManager()
+auth_manager = AuthenticationManager()
 financial_filter = FinancialContentFilter(audit_log_enabled=True)
 audit_logger = AuditLogger(collection_name="sensitive_query_logs")
 chat_history_manager = ChatHistoryManager()
@@ -148,48 +144,18 @@ def main():
             st.markdown("---")
             handle_authentication()
             
-            # Admin panel link (only for Admin users)
-            if auth_manager.get_user_role() == UserRole.ADMIN.value:
-                st.divider()
-                st.header("Admin Panel")
-                if st.button("Open Admin Dashboard"):
-                    st.session_state.show_admin = True
     else:
         # Sidebar for authentication only when not logged in
         with st.sidebar:
             handle_authentication()
     
-    # Show admin interface if requested and user is admin
-    if auth_manager.is_authenticated() and \
-       auth_manager.get_user_role() == UserRole.ADMIN.value and \
-       st.session_state.get("show_admin", False):
-        # Add a button to return to the main chatbot interface
-        col1, col2 = st.columns([1, 5])
-        with col1:
-            if st.button("← Return to Chatbot"):
-                st.session_state.show_admin = False
-                st.rerun()
-                
-        tab1, tab2 = st.tabs(["User Management", "Document Management"])
-        with tab1:
-            display_admin_interface(auth_manager)
-        with tab2:
-            display_admin_document_management(auth_manager, doc_manager)
-    # Main chat interface if authenticated    
-    elif auth_manager.is_authenticated():
-        tab1, tab2 = st.tabs(["Chat", "Documents"])
-        with tab1:
-            display_chat_interface()
-        with tab2:
-            st.subheader("Document Management")
-            display_document_upload(auth_manager, doc_manager)
-            st.divider()
-            display_document_list(auth_manager, doc_manager)
+    if auth_manager.is_authenticated():
+        display_chat_interface()
     else:
         st.info("Please login to use the chatbot.")
 
 def handle_authentication():
-    """Handle Firebase user authentication."""
+    """Handle user authentication."""
     st.header("Authentication")
     
     # If user is logged in, show logout button
@@ -200,7 +166,6 @@ def handle_authentication():
         if st.button("Logout"):
             auth_manager.logout()
             st.session_state.messages = []
-            st.session_state.show_admin = False
             st.rerun()
     else:
         # Login/Register tabs
@@ -491,8 +456,4 @@ def display_chat_interface():
         chat_sidebar.save_message_to_current_session("assistant", response, user_email)
 
 if __name__ == "__main__":
-    # Initialize "show_admin" flag in session state
-    if "show_admin" not in st.session_state:
-        st.session_state.show_admin = False
-        
     main()

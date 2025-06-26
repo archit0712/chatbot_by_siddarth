@@ -16,10 +16,6 @@ pypdf>=3.17.0
 PyPDF2>=3.0.1
 python-multipart>=0.0.6
 
-# Firebase Integration
-firebase-admin>=6.2.0
-google-cloud-firestore>=2.11.0
-google-cloud-storage>=2.10.0
 
 # Web Framework & UI
 requests>=2.31.0

@@ -71,27 +71,6 @@ Configure your environment variables in `config/.env`:
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key
 
-# Firebase Web App Configuration
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-FIREBASE_APP_ID=your_app_id
-FIREBASE_MEASUREMENT_ID=your_measurement_id
-FIREBASE_DATABASE_URL=your_database_url
-
-# Firebase Admin SDK Configuration
-FIREBASE_TYPE=service_account
-FIREBASE_PRIVATE_KEY_ID=your_private_key_id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_here\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=your_service_account@your_project.iam.gserviceaccount.com
-FIREBASE_CLIENT_ID=your_client_id
-FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
-FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
-FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
-FIREBASE_CLIENT_X509_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/your_service_account%40your_project.iam.gserviceaccount.com
-FIREBASE_UNIVERSE_DOMAIN=googleapis.com
 
 # Vector Database Configuration
 VECTOR_DB_PATH=./vector_db
@@ -103,11 +82,6 @@ USE_GUARDRAILS=true
 USE_UNIFIED_ANALYZER=true
 ```
 
-### **Option 2: JSON Files (Legacy)**
-
-If you prefer using JSON files, place them in the `config/` directory:
-- `firebase-adminsdk.json` (service account key)
-- `firebase_config.json` (web app config)
 
 ## 🎯 **Quick Start**
 
@@ -118,7 +92,6 @@ If you prefer using JSON files, place them in the `config/` directory:
 
 2. **Configure environment:**
    - Copy `env.example` to `config/.env` and fill in your values
-   - OR place Firebase JSON files in `config/` directory
 
 3. **Run the application:**
    ```bash
@@ -132,10 +105,3 @@ If you encounter `ModuleNotFoundError`, ensure you're running from the project r
 
 ### Environment File Not Found
 Make sure your `.env` file is located in the `config/` directory, not the project root. Copy `env.example` to `config/.env` and fill in your values.
-
-### Firebase Configuration Issues
-The application now supports both environment variables and JSON files:
-- **Recommended**: Use environment variables in `config/.env`
-- **Legacy**: Place JSON files in `config/` directory:
-  - `firebase-adminsdk.json` (service account key)
-  - `firebase_config.json` (web app config) 
