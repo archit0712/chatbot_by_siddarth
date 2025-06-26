@@ -1,16 +1,14 @@
-"""
-Authentication Module
+"""Simple authentication manager backed by SQLite."""
 
-Handles user authentication and access control.
-"""
-
-from enum import Enum
-from typing import Dict, Optional
+import sqlite3
 import hashlib
+import uuid
+from enum import Enum
+from typing import Dict, Optional, Any
+import streamlit as st
 
 
 class UserRole(str, Enum):
-    """User role enumeration."""
     JUNIOR = "Junior"
     SENIOR = "Senior"
     MANAGER = "Manager"
@@ -18,126 +16,61 @@ class UserRole(str, Enum):
 
 
 class AuthenticationManager:
-    """Handles user authentication and session management."""
-    
-    def __init__(self):
-        """Initialize with demo users."""
-        # In a real application, this would be a database
-        # Format: username -> {password_hash, role}
-        self.users = {
-            "junior_user": {
-                "password_hash": self._hash_password("junior123"),
-                "role": UserRole.JUNIOR
-            },
-            "senior_user": {
-                "password_hash": self._hash_password("senior123"),
-                "role": UserRole.SENIOR
-            },
-            "manager_user": {
-                "password_hash": self._hash_password("manager123"),
-                "role": UserRole.MANAGER
-            },
-            "admin_user": {
-                "password_hash": self._hash_password("admin123"),
-                "role": UserRole.ADMIN
-            }
-        }
-        
-        # Active sessions
-        self.active_sessions = {}
-    
+    """Handle user registration and login using a local SQLite database."""
+
+    def __init__(self, db_path: str = "./auth.db") -> None:
+        self.conn = sqlite3.connect(db_path, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row
+        self._init_db()
+
+    def _init_db(self) -> None:
+        cur = self.conn.cursor()
+        cur.execute(
+            """CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE,
+                password_hash TEXT,
+                role TEXT
+            )"""
+        )
+        self.conn.commit()
+
     def _hash_password(self, password: str) -> str:
-        """Hash a password using SHA-256.
-        
-        In a real application, use a more secure method like bcrypt.
-        
-        Args:
-            password: Plain text password
-            
-        Returns:
-            str: Hashed password
-        """
         return hashlib.sha256(password.encode()).hexdigest()
-    
-    def authenticate(self, username: str, password: str) -> Optional[str]:
-        """Authenticate a user and return session ID if successful.
-        
-        Args:
-            username: Username
-            password: Plain text password
-            
-        Returns:
-            Optional[str]: Session ID if authenticated, None otherwise
-        """
-        if username not in self.users:
-            return None
-            
-        user = self.users[username]
-        
-        if self._hash_password(password) != user["password_hash"]:
-            return None
-            
-        # In a real app, generate a secure session token
-        session_id = f"session_{username}"
-        
-        # Store session
-        self.active_sessions[session_id] = {
-            "username": username,
-            "role": user["role"]
+
+    def register_user(self, email: str, password: str, role: UserRole = UserRole.JUNIOR) -> Dict[str, Any]:
+        cur = self.conn.cursor()
+        try:
+            cur.execute(
+                "INSERT INTO users(id, email, password_hash, role) VALUES (?, ?, ?, ?)",
+                (str(uuid.uuid4()), email, self._hash_password(password), role.value),
+            )
+            self.conn.commit()
+            return {"success": True, "message": "User registered"}
+        except sqlite3.IntegrityError:
+            return {"success": False, "error": "Email already registered"}
+
+    def login(self, email: str, password: str) -> Dict[str, Any]:
+        cur = self.conn.cursor()
+        cur.execute("SELECT * FROM users WHERE email=?", (email,))
+        row = cur.fetchone()
+        if not row or row["password_hash"] != self._hash_password(password):
+            return {"success": False, "error": "Invalid credentials"}
+        st.session_state.user_info = {
+            "uid": row["id"],
+            "email": row["email"],
+            "role": row["role"],
+            "authenticated": True,
         }
-        
-        return session_id
-    
-    def get_user_role(self, session_id: str) -> Optional[UserRole]:
-        """Get user role from session ID.
-        
-        Args:
-            session_id: Session ID
-            
-        Returns:
-            Optional[UserRole]: User role if session is valid, None otherwise
-        """
-        if session_id not in self.active_sessions:
+        return {"success": True, "user": st.session_state.user_info}
+
+    def logout(self) -> None:
+        st.session_state.user_info = {"authenticated": False}
+
+    def is_authenticated(self) -> bool:
+        return st.session_state.get("user_info", {}).get("authenticated", False)
+
+    def get_user_role(self) -> Optional[str]:
+        if not self.is_authenticated():
             return None
-            
-        return self.active_sessions[session_id]["role"]
-    
-    def logout(self, session_id: str) -> bool:
-        """Logout user by removing session.
-        
-        Args:
-            session_id: Session ID
-            
-        Returns:
-            bool: True if logout successful, False otherwise
-        """
-        if session_id in self.active_sessions:
-            del self.active_sessions[session_id]
-            return True
-        
-        return False
-    
-    def has_access(self, session_id: str, required_role: UserRole) -> bool:
-        """Check if user has required access level.
-        
-        Args:
-            session_id: Session ID
-            required_role: Required role for access
-            
-        Returns:
-            bool: True if user has access, False otherwise
-        """
-        user_role = self.get_user_role(session_id)
-        
-        if user_role is None:
-            return False
-        
-        # Access hierarchy: ADMIN > MANAGER > SENIOR > JUNIOR
-        role_hierarchy = {
-            UserRole.JUNIOR: 1,
-            UserRole.SENIOR: 2,
-            UserRole.MANAGER: 3,
-            UserRole.ADMIN: 4
-        }
-        
-        return role_hierarchy[user_role] >= role_hierarchy[required_role]
+        return st.session_state.user_info.get("role")
