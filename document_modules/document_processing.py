@@ -1,7 +1,8 @@
 """
 Document Processing Module for TechConsult Inc Knowledge Chatbot
 
-Handles processing uploaded documents from Firebase Storage and indexing them in the vector database.
+Processes documents stored on the local filesystem and indexes them in the
+vector database.
 """
 
 import os
@@ -10,7 +11,7 @@ from typing import Dict, List, Any, Optional
 import logging
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from core.firebase_auth import UserRole
+from core.postgres_auth import UserRole
 from document_modules.document_manager import DocumentManager
 
 class DocumentProcessor:
@@ -25,79 +26,34 @@ class DocumentProcessor:
         self.vector_db = vector_db
         self.doc_manager = DocumentManager()
     
-    def process_firebase_document(self, document_id: str, user_role: UserRole) -> Dict[str, Any]:
-        """Process a document stored in Firebase and add to vector database.
-        
-        Args:
-            document_id: Firestore document ID
-            user_role: Current user's role for access control
-            
-        Returns:
-            Dict with processing status
-        """
+    def process_document(self, document_id: str, user_role: UserRole) -> Dict[str, Any]:
+        """Process a locally stored document and add it to the vector database."""
         try:
-            # Get document with access control check
             doc_result = self.doc_manager.get_document_content(document_id, user_role)
-            
             if not doc_result.get("success"):
-                return {
-                    "success": False,
-                    "error": doc_result.get("error", "Failed to access document")
-                }
-                
+                return {"success": False, "error": doc_result.get("error")}
+
             doc_data = doc_result["document"]
-            download_url = doc_data.get("download_url")
-            
-            if not download_url:
-                return {
-                    "success": False,
-                    "error": "No download URL available for document"
-                }
-            
-            # Create temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
-                temp_path = temp_file.name
-                
-            try:
-                # Download file from Firebase Storage
-                import requests
-                response = requests.get(download_url)
-                
-                if response.status_code != 200:
-                    return {
-                        "success": False,
-                        "error": f"Failed to download document: HTTP {response.status_code}"
-                    }
-                
-                # Save to temp file
-                with open(temp_path, 'wb') as f:
-                    f.write(response.content)
-                
-                # Process document and add to vector db
-                return self.process_pdf_file(
-                    file_path=temp_path,
-                    metadata={
-                        "title": doc_data.get("title", "Untitled"),
-                        "document_id": document_id,
-                        "min_access_level": doc_data.get("min_access_level"),
-                        "document_type": doc_data.get("document_type"),
-                        "description": doc_data.get("description", ""),
-                        "uploaded_by": doc_data.get("uploaded_by"),
-                        "uploader_email": doc_data.get("uploader_email")
-                    }
-                )
-                
-            finally:
-                # Clean up temp file
-                if os.path.exists(temp_path):
-                    os.unlink(temp_path)
-                    
+            file_path = doc_data.get("file_path")
+            if not file_path or not os.path.exists(file_path):
+                return {"success": False, "error": "File not found"}
+
+            return self.process_pdf_file(
+                file_path=file_path,
+                metadata={
+                    "title": doc_data.get("title", "Untitled"),
+                    "document_id": document_id,
+                    "min_access_level": doc_data.get("min_access_level"),
+                    "document_type": doc_data.get("document_type"),
+                    "description": doc_data.get("description", ""),
+                    "uploaded_by": doc_data.get("uploaded_by"),
+                    "uploader_email": doc_data.get("uploader_email"),
+                },
+            )
+
         except Exception as e:
-            logging.error(f"Error processing Firebase document: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Processing error: {str(e)}"
-            }
+            logging.error(f"Error processing document: {str(e)}")
+            return {"success": False, "error": f"Processing error: {str(e)}"}
     
     def process_pdf_file(self, file_path: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Process a PDF file and add chunks to vector database.
@@ -171,7 +127,7 @@ class DocumentProcessor:
             failed_count = 0
             
             for doc in accessible_docs:
-                result = self.process_firebase_document(doc['id'], user_role)
+                result = self.process_document(doc['id'], user_role)
                 if result.get("success"):
                     processed_count += 1
                 else:

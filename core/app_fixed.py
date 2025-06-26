@@ -12,7 +12,7 @@ from typing import Dict, Any
 
 from document_processor import DocumentProcessor
 from database import VectorDatabase
-from firebase_auth import FirebaseAuthManager, UserRole
+from postgres_auth import PostgresAuthManager, UserRole
 from admin import display_admin_interface
 from document_manager import DocumentManager
 from document_ui import display_document_upload, display_document_list, display_admin_document_management
@@ -29,7 +29,7 @@ VECTOR_DB_PATH = os.environ.get("VECTOR_DB_PATH", "./vector_db")
 # Initialize components
 document_processor = DocumentProcessor(document_dir=DOCUMENT_STORAGE)
 vector_db = VectorDatabase(db_path=VECTOR_DB_PATH)
-auth_manager = FirebaseAuthManager()
+auth_manager = PostgresAuthManager()
 doc_manager = DocumentManager()
 financial_filter = FinancialContentFilter(audit_log_enabled=True)
 audit_logger = AuditLogger(collection_name="sensitive_query_logs")

@@ -3,13 +3,13 @@ Admin interface for user management and role assignment.
 Only accessible to users with Admin role.
 """
 import streamlit as st
-from core.firebase_auth import FirebaseAuthManager, UserRole
+from core.postgres_auth import PostgresAuthManager, UserRole
 
-def display_admin_interface(auth_manager: FirebaseAuthManager) -> None:
+def display_admin_interface(auth_manager: PostgresAuthManager) -> None:
     """Display the admin interface for user and role management.
     
     Args:
-        auth_manager: Authenticated Firebase manager instance
+        auth_manager: Postgres authentication manager instance
     """
     st.title("Admin Dashboard")
     

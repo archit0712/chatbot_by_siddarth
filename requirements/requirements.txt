@@ -119,6 +119,7 @@ textblob>=0.17.0
 # Database Connectors (if expanding to other DBs)
 sqlalchemy>=2.0.0
 alembic>=1.11.0
+psycopg2-binary>=2.9.9
 
 # API Rate Limiting
 slowapi>=0.1.9
