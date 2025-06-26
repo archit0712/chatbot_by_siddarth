@@ -54,17 +54,17 @@ response = openai_client.chat.completions.create(...)
 
 ## 🔐 Authentication APIs
 
-### `core/firebase_auth.py` - Firebase Authentication Manager
+### `core/postgres_auth.py` - PostgreSQL Authentication Manager
 
-#### Class: `FirebaseAuthManager`
+#### Class: `PostgresAuthManager`
 
 ##### `__init__()`
 ```python
 def __init__(self)
 ```
-- **Description**: Initializes Firebase authentication
+- **Description**: Initializes PostgreSQL authentication
 - **Parameters**: None
-- **Returns**: FirebaseAuthManager instance
+- **Returns**: PostgresAuthManager instance
 
 ##### `login(email: str, password: str)`
 ```python
@@ -427,9 +427,9 @@ class ChatMessage:
 
 ### `core/admin.py` - Admin Interface
 
-#### `display_admin_interface(auth_manager: FirebaseAuthManager)`
+#### `display_admin_interface(auth_manager: PostgresAuthManager)`
 ```python
-def display_admin_interface(auth_manager: FirebaseAuthManager) -> None
+def display_admin_interface(auth_manager: PostgresAuthManager) -> None
 ```
 - **Description**: Renders admin dashboard for user management
 - **Parameters**:
@@ -620,7 +620,7 @@ VECTOR_DB_PATH=./vector_db
 ```python
 # Test authentication
 def test_auth():
-    auth = FirebaseAuthManager()
+    auth = PostgresAuthManager()
     result = auth.login("test@example.com", "password")
     assert result["success"] == True
 
@@ -658,7 +658,7 @@ def test_financial_filter():
 
 ```python
 # Initialize components
-auth_manager = FirebaseAuthManager()
+auth_manager = PostgresAuthManager()
 vector_db = VectorDatabase()
 financial_filter = FinancialContentFilter()
 chat_history = ChatHistoryManager()

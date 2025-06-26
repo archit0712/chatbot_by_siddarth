@@ -17,10 +17,10 @@ An intelligent enterprise chatbot that provides secure, role-based access to com
 
 - **Frontend**: Streamlit web application
 - **Backend**: Python with LangChain framework
-- **Database**: Firebase Firestore + FAISS vector database
+- **Database**: PostgreSQL + FAISS vector database
 - **AI/ML**: OpenAI GPT-3.5-turbo and text-embedding-3-small
-- **Authentication**: Firebase Authentication
-- **Storage**: Firebase Cloud Storage for documents
+- **Authentication**: PostgreSQL-based authentication system
+- **Storage**: Local file system for documents
 
 ##  Prerequisites
 
@@ -257,8 +257,8 @@ python test_financial_filter.py
 # Test vector database
 python -c "from database import VectorDatabase; db = VectorDatabase(); print('Vector DB initialized successfully')"
 
-# Test Firebase connection
-python -c "from firebase_auth import FirebaseAuthManager; auth = FirebaseAuthManager(); print('Firebase connected successfully')"
+# Test PostgreSQL connection
+python -c "from core.postgres_auth import PostgresAuthManager; auth = PostgresAuthManager(); print('Postgres connected successfully')"
 ```
 
 ### Test Scenarios

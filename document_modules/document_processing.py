@@ -10,7 +10,7 @@ from typing import Dict, List, Any, Optional
 import logging
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from core.firebase_auth import UserRole
+from core.postgres_auth import UserRole
 from document_modules.document_manager import DocumentManager
 
 class DocumentProcessor:

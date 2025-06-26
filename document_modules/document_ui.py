@@ -5,15 +5,15 @@ import os
 from firebase_admin import firestore
 
 from document_modules.document_manager import DocumentManager, DocumentType
-from core.firebase_auth import FirebaseAuthManager, UserRole
+from core.postgres_auth import PostgresAuthManager, UserRole
 from document_modules.document_processing import DocumentProcessor
 from core.database import VectorDatabase
 
-def display_document_upload(auth_manager: FirebaseAuthManager, doc_manager: DocumentManager) -> None:
+def display_document_upload(auth_manager: PostgresAuthManager, doc_manager: DocumentManager) -> None:
     """Display document upload interface with access level selection.
     
     Args:
-        auth_manager: FirebaseAuthManager instance
+        auth_manager: PostgresAuthManager instance
         doc_manager: DocumentManager instance
     """
     st.header("Upload Document")
@@ -143,11 +143,11 @@ def display_document_upload(auth_manager: FirebaseAuthManager, doc_manager: Docu
                 if os.path.exists(tmp_path):
                     os.unlink(tmp_path)
 
-def display_document_list(auth_manager: FirebaseAuthManager, doc_manager: DocumentManager) -> None:
+def display_document_list(auth_manager: PostgresAuthManager, doc_manager: DocumentManager) -> None:
     """Display list of documents accessible to the current user.
     
     Args:
-        auth_manager: FirebaseAuthManager instance
+        auth_manager: PostgresAuthManager instance
         doc_manager: DocumentManager instance
     """
     st.header("Available Documents")
@@ -291,11 +291,11 @@ def display_document_list(auth_manager: FirebaseAuthManager, doc_manager: Docume
         else:
             st.info("No documents available for your access level.")
 
-def display_admin_document_management(auth_manager: FirebaseAuthManager, doc_manager: DocumentManager) -> None:
+def display_admin_document_management(auth_manager: PostgresAuthManager, doc_manager: DocumentManager) -> None:
     """Display admin document management interface.
     
     Args:
-        auth_manager: FirebaseAuthManager instance
+        auth_manager: PostgresAuthManager instance
         doc_manager: DocumentManager instance
     """
     st.header("Document Management")

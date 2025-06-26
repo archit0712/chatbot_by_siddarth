@@ -5,7 +5,7 @@ from enum import Enum
 import firebase_admin
 from firebase_admin import storage, firestore
 from werkzeug.utils import secure_filename
-from core.firebase_auth import UserRole
+from core.postgres_auth import UserRole
 
 class DocumentType(str, Enum):
     POLICY = "Policy"
